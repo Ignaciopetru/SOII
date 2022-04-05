@@ -16,6 +16,7 @@
 
 
 #include "condition.hh"
+#include "system.hh"
 
 
 /// Dummy functions -- so we can compile our later assignments.
@@ -25,12 +26,15 @@
 
 Condition::Condition(const char *debugName, Lock *conditionLock)
 {
-    // TODO
+    name = debugName;
+    cond = conditionLock;
+    waiting = new List<Semaphore*>;
 }
 
 Condition::~Condition()
 {
-    // TODO
+    //tal vez algo mas vaya aca si hay list o algo
+    delete waiting; // esto se deeberia encargar de llamar ~Semaphore para cada item
 }
 
 const char *
@@ -42,17 +46,34 @@ Condition::GetName() const
 void
 Condition::Wait()
 {
-    // TODO
+    Semaphore *semaphore = new Semaphore(currentThread->GetName(), 0);
+    waiting->Append(semaphore);
+    cond->Release();
+    // sleep
+    semaphore->P();
+    cond->Acquire();
 }
 
+// Puede que sea necesairo tener el lock antes de llamar a signal o broadcast
 void
 Condition::Signal()
 {
-    // TODO
+    ASSERT(cond->IsHeldByCurrentThread());
+    Semaphore *semaphore = waiting->Pop();
+    if (semaphore != nullptr) {
+        semaphore->V();
+        semaphore->~Semaphore();
+    }    
 }
 
 void
 Condition::Broadcast()
 {
-    // TODO
+    ASSERT(cond->IsHeldByCurrentThread());
+    Semaphore *semaphore;
+    while (!waiting->IsEmpty()) {
+        semaphore = waiting->Pop();
+        semaphore->V();
+        semaphore->~Semaphore();
+    }  
 }
