@@ -98,7 +98,7 @@ private:
 public:
 
     /// Initialize a `Thread`.
-    Thread(const char *debugName, bool joinable);
+    Thread(const char *debugName, bool joinable, unsigned int priority);
 
     /// Deallocate a Thread.
     ///
@@ -130,7 +130,14 @@ public:
     const char *GetName() const;
 
     void Print() const;
-    
+
+    unsigned int GetPriority();
+
+    unsigned int GetOriginalPriority();
+
+    void SetPriority(unsigned int priority);
+
+    void SetPriorityHerencia(unsigned int priority);
 
 private:
     // Some of the private data for this class is listed above.
@@ -148,6 +155,10 @@ private:
     bool joinable;
 
     Channel *canal;
+
+    unsigned int priority;
+
+    unsigned int originalPriority;
 
     /// Allocate a stack for thread.  Used internally by `Fork`.
     void StackAllocate(VoidFunctionPtr func, void *arg);

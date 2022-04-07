@@ -17,6 +17,8 @@
 
 #include "lock.hh"
 #include "system.hh"
+#include <stdlib.h>
+#include <stdio.h>
 
 
 /// Dummy functions -- so we can compile our later assignments.
@@ -44,6 +46,10 @@ void
 Lock::Acquire()
 {
     ASSERT(!IsHeldByCurrentThread());
+    //* Herencia de prioridad. Utilizada para solucionar el problema de inversion de prioridades en locks. 
+    if (lockOwner && lockOwner->GetPriority() > currentThread->GetPriority()) {
+        lockOwner->SetPriorityHerencia(currentThread->GetPriority());
+    }
     semaphore->P();
     lockOwner = currentThread;
 }
@@ -52,6 +58,8 @@ void
 Lock::Release()
 {
     ASSERT(IsHeldByCurrentThread());
+    //* Si fue actualizada su prioridad.
+    lockOwner->SetPriorityHerencia(lockOwner->GetOriginalPriority());
     semaphore->V();
     lockOwner = nullptr;
 }

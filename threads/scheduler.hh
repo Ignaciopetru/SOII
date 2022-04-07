@@ -40,10 +40,12 @@ public:
     // Print contents of ready list.
     void Print();
 
+    void updatePriority( );
+
 private:
 
     // Queue of threads that are ready to run, but not running.
-    List<Thread*> *readyList;
+    //? List<Thread*> *readyList;
     List<Thread*> *readyList[MAX_PRIORITY + 1];
 
 };

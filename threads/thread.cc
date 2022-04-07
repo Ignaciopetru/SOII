@@ -41,13 +41,21 @@ IsThreadStatus(ThreadStatus s)
 /// `Thread::Fork`.
 ///
 /// * `threadName` is an arbitrary string, useful for debugging.
-Thread::Thread(const char *threadName, bool joinable_)
+Thread::Thread(const char *threadName, bool joinable_, unsigned int priority_)
 {
     name     = threadName;
     stackTop = nullptr;
     stack    = nullptr;
     status   = JUST_CREATED;
     joinable = joinable_;
+
+    if (priority_ > MAX_PRIORITY) {
+        priority = MAX_PRIORITY;
+        originalPriority = MAX_PRIORITY;
+    } else {
+        priority = priority_;
+        originalPriority = priority_;
+    }
 
     if (joinable)
     {
@@ -122,6 +130,48 @@ Thread::Join()
     canal->Receive(&a);
     DEBUG('t', "Receive joinable thread \"%s\"\n", name);
 }
+
+unsigned int
+Thread::GetPriority(){
+    return priority;
+}
+
+unsigned int
+Thread::GetOriginalPriority(){
+    return originalPriority;
+}
+
+//* Esta prioridad tomará efecto en la siguiente ejecucion de Run del scheduler.
+void
+Thread::SetPriority(unsigned int priority_){
+    //* Si la prioridad es menor a cero es invalida.
+    ASSERT(priority_ < 0);
+
+    if (priority_ > MAX_PRIORITY) {
+        priority = MAX_PRIORITY;
+        originalPriority = MAX_PRIORITY;
+        return;
+    }
+
+    if (priority_ )
+    priority = priority_;
+    originalPriority = priority_;
+}
+
+//* No actualiza originalPriority para poder restaurar la prioridad luego de un lock.
+void
+Thread::SetPriorityHerencia(unsigned int priority_){
+    ASSERT(priority_ >= 0);
+
+    if (priority_ > MAX_PRIORITY) {
+        priority = MAX_PRIORITY;
+        return;
+    }
+
+    if (priority_ )
+    priority = priority_;
+}
+
 
 /// Check a thread's stack to see if it has overrun the space that has been
 /// allocated for it.  If we had a smarter compiler, we would not need to

@@ -14,7 +14,6 @@
 
 #define TAM_GONDOLA 10
 #define OPERACIONES 50
-static bool done[2];
 
 int harina = 0;
 Lock *cantHarina = new Lock("noVacia");
@@ -29,15 +28,14 @@ productorDeHarina(void *n_)
     while (i < OPERACIONES)
     {
         cantHarina->Acquire();
-        if (harina < TAM_GONDOLA) {
-            harina ++;
-            printf("Productor agrega uno de harina, actual: %d\n", harina);
-            i ++;
-            noVaciaCond->Signal();
-            cantHarina->Release();
-        } else {
-            noLlenaCond->Wait();
-        }
+        while(harina == TAM_GONDOLA) noLlenaCond->Wait();
+
+        harina ++;
+        printf("Productor agrega uno de harina, actual: %d\n", harina);
+        i ++;
+        noVaciaCond->Signal();
+        cantHarina->Release();
+
     }
     printf("Productor termina\n");
 }
@@ -49,15 +47,12 @@ consumidorDeHarina(void *n_)
     while (i < OPERACIONES)
     {
         cantHarina->Acquire();
-        if (harina > 0) {
-            harina --;
-            printf("Consumidor retira uno de harina, actual: %d\n", harina);
-            i ++;
-            noLlenaCond->Signal();
-            cantHarina->Release();
-        } else {
-            noVaciaCond->Wait();
-        }
+        while(harina == 0) noVaciaCond->Wait();
+        harina --;
+        printf("Consumidor retira uno de harina, actual: %d\n", harina);
+        i ++;
+        noLlenaCond->Signal();
+        cantHarina->Release();
     }
     printf("Consumidor termina\n");
 }
@@ -67,27 +62,19 @@ ThreadTestProdCons()
 {
     char *name = new char [16];
     sprintf(name, "Consumirdor");
-    Thread *t = new Thread(name, false);
+    Thread *t = new Thread(name, true, 0);
     unsigned *n = new unsigned;
     t->Fork(consumidorDeHarina, (void*) n);
     
-    /*
-    char *name3 = new char [16];
-    sprintf(name3, "Consumirdor 2");
-    Thread *t3 = new Thread(name3);
-    t3->Fork(consumidorDeHarina, (void*) n);
-    */
 
     char *name2 = new char [16];
     sprintf(name2, "Productor");
-    Thread *t2 = new Thread(name2, false);
+    Thread *t2 = new Thread(name2, true, 0);
     t2->Fork(productorDeHarina, (void*) n);
 
-    for (unsigned i = 0; i < 2; i++) {
-        while (!done[i]) {
-            currentThread->Yield();
-        }
-    }
+    t->Join();
+    t2->Join();
+
     printf("Harina final: %d.\n",
            harina);
 }

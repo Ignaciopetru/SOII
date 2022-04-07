@@ -17,6 +17,7 @@
 
 #include "condition.hh"
 #include "system.hh"
+#include <stdio.h>
 
 
 /// Dummy functions -- so we can compile our later assignments.
@@ -47,10 +48,14 @@ void
 Condition::Wait()
 {
     Semaphore *semaphore = new Semaphore(currentThread->GetName(), 0);
-    waiting->Append(semaphore);
+    //* Se almacenan los semaforos en orden dependiendo la prioridad del thread, para al despertarlos hacer que se levante primero el de mayor prioridad.
+    waiting->SortedInsert(semaphore, currentThread->GetPriority());
     cond->Release();
+
     // sleep
     semaphore->P();
+    //! Se libera el semaforo y se lo elimina de la lista.
+    waiting->Remove(semaphore);
     cond->Acquire();
 }
 

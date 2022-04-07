@@ -17,6 +17,8 @@
 
 
 Channel *canal = new Channel("banana");
+Lock *lock = new Lock("asdasd");
+Condition *condicion = new Condition("asd",lock);
 
 void threadSender(void *name_)
 {
@@ -42,16 +44,16 @@ void threadReceiver(void *name_)
 void ThreadTestChannel()
 {
 
-    Thread *newThreadS1 = new Thread("Sender1", true);
+    Thread *newThreadS1 = new Thread("Sender1", true, 0);
     newThreadS1->Fork(threadSender, (void *)"Sender1");
 
-    Thread *newThreadS2 = new Thread("Sender2", true);
-    newThreadS2->Fork(threadSender, (void *)"Sender2");
-
-    Thread *newThreadR1 = new Thread("Reciver1", true);
+    Thread *newThreadR1 = new Thread("Reciver1", true, 0);
     newThreadR1->Fork(threadReceiver, (void *)"Reciver1");
 
-    Thread *newThreadR2 = new Thread("Reciver2", true);
+    Thread *newThreadS2 = new Thread("Sender2", true, 0);
+    newThreadS2->Fork(threadSender, (void *)"Sender2");
+
+    Thread *newThreadR2 = new Thread("Reciver2", true, 0);
     newThreadR2->Fork(threadReceiver, (void *)"Reciver2");
 
     
@@ -63,7 +65,7 @@ void ThreadTestChannel()
     printf("Hilo 3 termino\n");
     newThreadR2->Join();
     printf("Hilo 4 termino\n");
-    
+
     printf("Todos terminaron de mander acorrecta\n");
 
 }
